@@ -1,0 +1,1 @@
+ - Each @rule is just a condition that can be satisfied anywhere in the scope chain
