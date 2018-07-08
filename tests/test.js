@@ -189,6 +189,61 @@ testIsBranchUnderScope(
 	true
 );
 
+testIsBranchUnderScope(
+	'always ancestor :root definitions apply to everything',
+	{ selector: ':root' }, // define variable
+	{ selector: '.foo' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'always ancestor :root usage does not pick up some other scope',
+	{ selector: '.foo' }, // define variable
+	{ selector: ':root' }, // variable usage
+	false
+);
+
+testIsBranchUnderScope(
+	'always ancestor star *',
+	{ selector: '*' }, // define variable
+	{ selector: '.foo' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'always ancestor start * usage does not pick up some other scope',
+	{ selector: '.foo' }, // define variable
+	{ selector: '*' }, // variable usage
+	false
+);
+
+testIsBranchUnderScope(
+	'always ancestor html tag',
+	{ selector: 'html' }, // define variable
+	{ selector: '.foo' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'always ancestor html usage does not pick up some other scope',
+	{ selector: '.foo' }, // define variable
+	{ selector: 'html' }, // variable usage
+	false
+);
+
+testIsBranchUnderScope(
+	'always ancestor shadow dom :host',
+	{ selector: ':host' }, // define variable
+	{ selector: '.foo' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'always ancestor :host usage does not pick up some other scope',
+	{ selector: '.foo' }, // define variable
+	{ selector: ':host' }, // variable usage
+	false
+);
 
 testIsBranchUnderScope(
 	'multiple in group and extra descendant haystack group',
