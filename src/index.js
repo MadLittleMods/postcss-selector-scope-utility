@@ -1,4 +1,16 @@
-//import generateScopeList from './lib/generate-scope-list';
-//export { generateScopeList };
+import generateBranches from './lib/generate-branches';
+import isBranchUnderScope from './lib/is-branch-under-scope';
 
-export { default as generateScopeList } from './lib/generate-scope-list';
+
+function isUnderScope(needleNode, haystackNode) {
+	const needleBranches = generateBranches(needleNode);
+	const haystackBranches = generateBranches(haystackNode);
+
+	return needleBranches.some((needleBranch) => {
+		return haystackBranches.some((haystackBranch) => {
+			return isBranchUnderScope(needleBranch, haystackBranch);
+		});
+	});
+}
+
+export default isUnderScope;
