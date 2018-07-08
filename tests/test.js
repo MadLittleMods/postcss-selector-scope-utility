@@ -127,7 +127,7 @@ testGenerateBranches(
 );
 
 testGenerateBranches(
-	'media query',
+	'media query at-rule',
 	'@media print { .foo { } }',
 	[
 		{
@@ -262,6 +262,36 @@ testIsBranchUnderScope(
 	'adjacent sibling can\'t be a descendant',
 	{ selector: '.foo + .bar' }, // define variable
 	{ selector: '.foo > .bar' }, // variable usage
+	false
+);
+
+testIsBranchUnderScope(
+	'variable used in media query at-rule conditional',
+	{ selector: '.foo' }, // define variable
+	// variable usage
+	{
+		selector: '.foo',
+		conditionals: [{
+			type: 'atrule',
+			name: 'media',
+			params: 'print'
+		}]
+	},
+	true
+);
+
+testIsBranchUnderScope(
+	'variable defined in media query at-rule conditional',
+	// define variable
+	{
+		selector: '.foo',
+		conditionals: [{
+			type: 'atrule',
+			name: 'media',
+			params: 'print'
+		}]
+	},
+	{ selector: '.foo' }, // variable usage
 	false
 );
 

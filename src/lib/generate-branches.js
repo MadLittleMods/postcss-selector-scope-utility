@@ -44,8 +44,23 @@ let getBranchesCopy = function(branches) {
 
 
 
-// Generate a scope list
-// Array of array of selector strings
+// Generate branches
+// List of selectors from a given PostCSS node
+//
+// Returns:
+// [
+// 	{
+// 		source: node.source,
+// 		selector: '.foo',
+// 		// These are things that can be satisfied anywhere
+// 		conditionals: [{
+// 			source: node.source,
+// 			type: 'atrule',
+// 			name: 'media',
+// 			params: 'print'
+// 		}]
+// 	}
+// ]
 export default function generateBranches(targetNode) {
 	const conditionals = [];
 	// Walk over the ancestors top-down

@@ -1,8 +1,17 @@
 import debugSetup from 'debug';
 const debug = debugSetup('is-branch-under-scope');
 
+const checkMatchingConditional = function(needleConditional, haystackConditional) {
+	if(needleConditional.type !== haystackConditional.type) {
+		return false;
+	}
 
-let checkMatchingNode = function(needleNode, haystackNode) {
+	if(needleConditional.type === 'atrule') {
+		return needleConditional.name === haystackConditional.name && needleConditional.params === haystackConditional.params;
+	}
+};
+
+const checkMatchingNode = function(needleNode, haystackNode) {
 	if(needleNode.type !== haystackNode.type && needleNode.type !== 'universal' && haystackNode.type !== 'universal') {
 		return false;
 	}
@@ -68,7 +77,7 @@ let checkMatchingNode = function(needleNode, haystackNode) {
 };
 
 // Check whether all of the needle is in the haystack
-let checkMatchingGroup = function(needleGroup, haystackGroup) {
+const checkMatchingGroup = function(needleGroup, haystackGroup) {
 	let currentHaystackIndex = 0;
 	return needleGroup.every(function(needleNode) {
 
@@ -105,7 +114,7 @@ let checkMatchingGroup = function(needleGroup, haystackGroup) {
 // .foo {
 // 	color: var(--some-color);
 // }
-let isBranchUnderScope = function(needleBranch, haystackBranch) {
+const isBranchUnderScope = function(needleBranch, haystackBranch) {
 	debug('isBranchUnderScope:', needleBranch.selector.toString(), '|||', haystackBranch.selector.toString());
 
 	let haystackGroups = haystackBranch.selector.split((node) => {
@@ -115,7 +124,15 @@ let isBranchUnderScope = function(needleBranch, haystackBranch) {
 		return node.type === 'combinator';
 	});
 
-	return needleGroups.every(function(needleGroup) {
+	const wereConditionalsMet = (needleBranch.conditionals || []).every((needleConditional) => {
+		return (haystackBranch.conditionals || []).some((haystackConditional) => {
+			const isMatching = checkMatchingConditional(needleConditional, haystackConditional);
+			return isMatching;
+		});
+	});
+	debug('wereConditionalsMet', wereConditionalsMet);
+
+	return wereConditionalsMet && needleGroups.every(function(needleGroup) {
 		return haystackGroups.some(function(haystackGroup) {
 			debug('needleGroup', needleGroup.toString());
 			debug('haystackGroup', haystackGroup.toString());
