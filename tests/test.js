@@ -246,10 +246,45 @@ testIsBranchUnderScope(
 );
 
 testIsBranchUnderScope(
-	'multiple in group and extra descendant haystack group',
+	'variable flows to descendant',
+	{ selector: '.foo' }, // define variable
+	{ selector: '.foo .qux' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'multiple in group and variable flows to descendant',
 	{ selector: '.foo.bar' }, // define variable
 	{ selector: '.foo.bar.baz .qux' }, // variable usage
-	false
+	true
+);
+
+testIsBranchUnderScope(
+	'variable flows to direct descendant',
+	{ selector: '.foo' }, // define variable
+	{ selector: '.foo > .bar' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'.foo variable flows to descendant .qux even though it is a sibling of .bar',
+	{ selector: '.foo' }, // define variable
+	{ selector: '.foo > .bar + .qux' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'starting with the needle, variable flows to descendant with an adjacent sibling combinator in between',
+	{ selector: '.foo' }, // define variable
+	{ selector: '.foo > .bar + .qux .foo' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'variable flows to descendant with an adjacent sibling combinator in between',
+	{ selector: '.foo' }, // define variable
+	{ selector: '.garply > .bar + .qux .foo' }, // variable usage
+	true
 );
 
 testIsBranchUnderScope(
@@ -260,10 +295,10 @@ testIsBranchUnderScope(
 );
 
 testIsBranchUnderScope(
-	'adjacent sibling selector and variable defined for .bar is not .baz',
+	'adjacent sibling selector and variable flows to descendant',
 	{ selector: '.foo + .bar' }, // define variable
 	{ selector: '.foo + .bar .baz' }, // variable usage
-	false
+	true
 );
 
 testIsBranchUnderScope(
@@ -288,10 +323,10 @@ testIsBranchUnderScope(
 );
 
 testIsBranchUnderScope(
-	'general sibling declaration and variable defined for .bar is not .baz',
+	'general sibling declaration and variable flows to descendant',
 	{ selector: '.foo ~ .bar' }, // define variable
 	{ selector: '.foo + .bar .baz' }, // variable usage
-	false
+	true
 );
 
 testIsBranchUnderScope(
@@ -309,30 +344,37 @@ testIsBranchUnderScope(
 );
 
 testIsBranchUnderScope(
-	'variable defined for .foo is not for .bar',
+	'needle should apply to last part of haystack',
+	{ selector: '.foo' }, // define variable
+	{ selector: '.bar:hover + .foo' }, // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'sibling is not a descendant',
 	{ selector: '.foo' }, // define variable
 	{ selector: '.foo:hover + .bar' }, // variable usage
 	false
 );
 
 testIsBranchUnderScope(
-	'variable defined for .bar is not .foo',
+	'adjacent sibling and variable defined for .bar is not .foo',
 	{ selector: '.foo:hover + .bar' }, // define variable
 	{ selector: '.foo' }, // variable usage
 	false
 );
 
 testIsBranchUnderScope(
-	'variable defined for .foo.foo is not .foo.bar',
+	'adjacent sibling selector and variable defined for .foo.foo is not .foo.bar',
 	{ selector: '.foo.bar + .foo.foo' }, // define variable
 	{ selector: '.foo.bar' }, // variable usage
 	false
 );
 
 testIsBranchUnderScope(
-	'variable defined for .foo.bar is not .foo.foo',
-	{ selector: '.foo.bar' }, // define variable
-	{ selector: '.foo.bar + .foo.foo' }, // variable usage
+	'descendant selector and variable defined for .foo.foo is not .foo.bar',
+	{ selector: '.foo.bar .foo.foo' }, // define variable
+	{ selector: '.foo.bar' }, // variable usage
 	false
 );
 
