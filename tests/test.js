@@ -5,13 +5,14 @@
 import test from 'tape';
 import deepEqual from 'deep-equal';
 import yargs from 'yargs';
+import pick from 'lodash/pick';
 
 import postcss from 'postcss';
 
 import parseSelector from '../src/lib/parse-selector';
-//import { generateScopeList } from '../src/index';
 import generateBranches from '../src/lib/generate-branches';
 import isBranchUnderScope from '../src/lib/is-branch-under-scope';
+
 
 var opts = yargs
   .option('grep', {
@@ -69,15 +70,23 @@ let generateBranchesProcessor = (...processArgs) => {
 };
 
 let testGenerateBranches = function(name, input, expected) {
-	if(!opts.grep || (opts.grep && grepRe.test(name))) {
+	const testName = `testGenerateBranches: ${name}`;
+	if(!opts.grep || (opts.grep && grepRe.test(testName))) {
 		generateBranchesProcessor(input)
 			.then((result) => {
-				//console.log('result', result);
-				test(name, (t) => {
-					t.plan(expected.length);
+				test(testName, (t) => {
+					t.plan(2 * expected.length);
 
-					var hasAllBranches = expected.forEach((branch, index) => {
-						return t.equal(result[index].selector.toString(), branch);
+					expected.forEach((expectedBranch, index) => {
+						const expectedSelector = typeof expectedBranch === 'object' ? expectedBranch.selector : expectedBranch;
+						const expectedConditionals = typeof expectedBranch === 'object' ? expectedBranch.conditionals : [];
+
+						t.equal(result[index].selector.toString(), expectedSelector, `input \`${input}\` should generate branches \`${expected}\``);
+						t.deepEqual(
+							result[index].conditionals.map(conditional => pick(conditional, ['type', 'name', 'params'])),
+							expectedConditionals,
+							'should have all conditionals'
+						)
 					});
 				});
 			});
@@ -121,69 +130,42 @@ testGenerateBranches(
 	'media query',
 	'@media print { .foo { } }',
 	[
-		'.foo .bar'
+		{
+			selector: '.foo',
+			conditionals: [{
+				type: 'atrule',
+				name: 'media',
+				params: 'print'
+			}]
+		}
 	]
 );
 
 
-/* * /
-testGenerateScopeList(
-	'stacked classes',
-	'.foo.bar { }',
-	[
-		[['.foo', '.bar']]
-	]
-);
-
-testGenerateScopeList(
-	'stacked class and descendant',
-	'.foo.bar .baz { }',
-	[
-		[['.foo', '.bar'], '.baz']
-	]
-);
-
-testGenerateScopeList(
-	'multiple descendant pieces stacking',
-	'foo[type="checkbox"] .bar.baz { }',
-	[
-		[['.foo', '[type="checkbox"]'], ['.bar', '.baz']]
-	]
-);
-
-testGenerateScopeList(
-	'Pseudo element',
-	'.foo:hover { }',
-	[
-		[['.foo', ':hover']]
-	]
-);
-/* */
 
 
 
 
 
 
-
-
-let testIsBranchUnderScope = function(name, needleSelectorString, haystackSelectorString, expected) {
-	if(!opts.grep || (opts.grep && grepRe.test(name))) {
-		test(name, (t) => {
+let testIsBranchUnderScope = function(name, needle, haystack, expected) {
+	const testName = `testIsBranchUnderScope: ${name}`;
+	if(!opts.grep || (opts.grep && grepRe.test(testName))) {
+		test(testName, (t) => {
 			t.plan(1);
-			let parsedNeedle = parseSelector(needleSelectorString);
-			let parsedHaystack = parseSelector(haystackSelectorString);
-			let needle = {
-				selector: parsedNeedle.nodes[0]
-			};
-			let haystack = {
-				selector: parsedHaystack.nodes[0]
-			}
-			let result = isBranchUnderScope(needle, haystack);
+			let result = isBranchUnderScope(
+				{
+					...needle,
+					selector: parseSelector(needle.selector).nodes[0]
+				}, {
+					...haystack,
+					selector: parseSelector(haystack.selector).nodes[0]
+				}
+			);
 
 			return expected ?
-				t.ok(result, `\`${needleSelectorString}\`(define variable) should be under scope of \`${haystackSelectorString}\`(variable usage)`) :
-				t.notOk(result, `\`${needleSelectorString}\`(define variable) should NOT be under scope of \`${haystackSelectorString}\`(variable usage)`);
+				t.ok(result, `\`${needle.selector}\`(define variable) should be under scope of \`${haystack.selector}\`(variable usage)`) :
+				t.notOk(result, `\`${needle.selector}\`(define variable) should NOT be under scope of \`${haystack.selector}\`(variable usage)`);
 		});
 	}
 };
@@ -193,94 +175,93 @@ let testIsBranchUnderScope = function(name, needleSelectorString, haystackSelect
 
 testIsBranchUnderScope(
 	'same selector',
-	'.foo', // define variable
-	'.foo', // variable usage
+	{ selector: '.foo' }, // define variable
+	{ selector: '.foo' }, // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'in group',
-	'.bar', // define variable
-	'.foo.bar', // variable usage
+	{ selector: '.bar' }, // define variable
+	{ selector: '.foo.bar' }, // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'multiple in group',
-	'.foo.bar', // define variable
-	'.foo.bar.baz', // variable usage
+	{ selector: '.foo.bar' }, // define variable
+	{ selector: '.foo.bar.baz' }, // variable usage
 	true
 );
 
 
 testIsBranchUnderScope(
 	'multiple in group and extra descendant haystack group',
-	'.foo.bar', // define variable
-	'.foo.bar.baz .qux', // variable usage
+	{ selector: '.foo.bar' }, // define variable
+	{ selector: '.foo.bar.baz .qux' }, // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'adjacent sibling selector',
-	'.foo + .bar', // define variable
-	'.foo + .bar .baz', // variable usage
+	{ selector: '.foo + .bar' }, // define variable
+	{ selector: '.foo + .bar .baz' }, // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'adjacent sibling selector plus extra haystack class',
-	'.foo + .bar', // define variable
-	'.foo.qux + .bar', // variable usage
+	{ selector: '.foo + .bar' }, // define variable
+	{ selector: '.foo.qux + .bar' }, // variable usage
 	true
 );
 
 testIsBranchUnderScope(
-	'adjacent sibling declaration used in general sibling (this is questionable)',
-	'.foo + .bar', // define variable
-	'.foo ~ .bar .baz', // variable usage
-	true
+	'adjacent sibling is not necessarily a general sibling',
+	{ selector: '.foo + .bar' }, // define variable
+	{ selector: '.foo ~ .bar .baz' }, // variable usage
+	false
 );
 
 testIsBranchUnderScope(
 	'general sibling declaration used in adjacent sibling',
-	'.foo ~ .bar', // define variable
-	'.foo + .bar .baz', // variable usage
+	{ selector: '.foo ~ .bar' }, // define variable
+	{ selector: '.foo + .bar .baz' }, // variable usage
 	true
 );
 
-
 testIsBranchUnderScope(
 	'pseudo',
-	'.foo', // define variable
-	'.foo:hover', // variable usage
+	{ selector: '.foo' }, // define variable
+	{ selector: '.foo:hover' }, // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'variable defined in pseudo should not apply to parent',
-	'.foo:hover', // define variable
-	'.foo', // variable usage
+	{ selector: '.foo:hover' }, // define variable
+	{ selector: '.foo' }, // variable usage
 	false
 );
 
 testIsBranchUnderScope(
 	'nested selector',
-	'.foo:not(.bar)', // define variable
-	'.foo:not(.bar:not(.baz))', // variable usage
+	{ selector: '.foo:not(.bar)' }, // define variable
+	{ selector: '.foo:not(.bar:not(.baz))' }, // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'multiple in group but targeting something else',
-	'.foo.bar .foo.qux', // define variable
-	'.foo.bar', // variable usage
+	{ selector: '.foo.bar .foo.qux' }, // define variable
+	{ selector: '.foo.bar' }, // variable usage
 	false
 );
 
 testIsBranchUnderScope(
-	'..',
-	'.foo + .bar', // define variable
-	'.foo > .bar', // variable usage
+	'adjacent sibling can\'t be a descendant',
+	{ selector: '.foo + .bar' }, // define variable
+	{ selector: '.foo > .bar' }, // variable usage
 	false
 );
 

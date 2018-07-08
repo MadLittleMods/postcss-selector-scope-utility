@@ -1,5 +1,5 @@
-//import nomo from 'node-monkey';
-//nomo.start({port: 50501});
+import debugSetup from 'debug';
+const debug = debugSetup('generate-branches');
 
 import parser from 'postcss-selector-parser';
 import parseSelector from './parse-selector';
@@ -79,7 +79,12 @@ export default function generateBranches(targetNode) {
 				}, []);
 			}
 			else if(currentNode.type === 'atrule') {
-				conditionals.push(currentNode);
+				conditionals.push({
+					source: currentNode.source,
+					type: currentNode.type,
+					name: currentNode.name,
+					params: currentNode.params
+				});
 			}
 
 			return prevBranches;
@@ -92,7 +97,7 @@ export default function generateBranches(targetNode) {
 		branch.conditionals = conditionals;
 	});
 
-	console.log('branches', branches.map(function(branch) { return branch.selector.toString(); }));
+	debug('branches', branches.map(function(branch) { return branch.selector.toString(); }));
 
 	return branches;
 }

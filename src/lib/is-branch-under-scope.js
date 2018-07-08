@@ -1,16 +1,5 @@
-
-
-// Wrapper around [`container.split`](https://github.com/postcss/postcss-selector-parser/blob/master/API.md#containersplitcallback)
-let splitNode = function(node, ...splitArgs) {
-	return node.split.apply(node, splitArgs)
-		// Remove the combinator piece
-		.map((group, index, groups) => {
-			if(index < (groups.length - 1)) {
-				return group.slice(0, -1);
-			}
-			return group;
-		});
-};
+import debugSetup from 'debug';
+const debug = debugSetup('is-branch-under-scope');
 
 
 let checkMatchingNode = function(needleNode, haystackNode) {
@@ -44,6 +33,38 @@ let checkMatchingNode = function(needleNode, haystackNode) {
 		// TODO: warning (should already be converted to explicit)
 		// .foo { & .bar {} } -> .foo .bar
 	}
+	else if (needleNode.type === 'combinator') {
+		const combinatorMatchMap = {
+			// descendant selector
+			' ': [
+				' ',
+				'>>',
+				'>'
+			],
+			'>>': [
+				' ',
+				'>>',
+				'>'
+			],
+			// child selector (direct descendant)
+			'>': [
+				'>'
+			],
+			// adjacent sibling selector
+			'+': [
+				'+'
+			],
+			// general sibling selector
+			'~': [
+				'~',
+				'+'
+			]
+		}
+
+		return combinatorMatchMap[needleNode.value].some((combinator) => {
+			return combinator === haystackNode.value;
+		});
+	}
 };
 
 // Check whether all of the needle is in the haystack
@@ -54,8 +75,8 @@ let checkMatchingGroup = function(needleGroup, haystackGroup) {
 		const availableHaystack = haystackGroup.slice(currentHaystackIndex);
 
 		return availableHaystack.some(function(haystackNode, haystackIndex) {
-			console.log('\tneedleNode', needleNode.toString());
-			console.log('\thaystackNode', haystackNode.toString());
+			debug('\tneedleNode', needleNode.toString(), needleNode.type);
+			debug('\thaystackNode', haystackNode.toString(), haystackNode.type);
 			const isMatching = checkMatchingNode(needleNode, haystackNode);
 
 			// Move our starting place in the haystack up to where we found the piece so we don't re-match it
@@ -63,7 +84,7 @@ let checkMatchingGroup = function(needleGroup, haystackGroup) {
 				currentHaystackIndex = haystackIndex;
 			}
 
-			console.log('\tisMatching node', isMatching);
+			debug('\tisMatching node', isMatching);
 
 			return isMatching;
 		});
@@ -85,7 +106,7 @@ let checkMatchingGroup = function(needleGroup, haystackGroup) {
 // 	color: var(--some-color);
 // }
 let isBranchUnderScope = function(needleBranch, haystackBranch) {
-	console.log('ius', needleBranch.selector.toString(), '|||', haystackBranch.selector.toString());
+	debug('isBranchUnderScope:', needleBranch.selector.toString(), '|||', haystackBranch.selector.toString());
 
 	let haystackGroups = haystackBranch.selector.split((node) => {
 		return node.type === 'combinator';
@@ -96,11 +117,11 @@ let isBranchUnderScope = function(needleBranch, haystackBranch) {
 
 	return needleGroups.every(function(needleGroup) {
 		return haystackGroups.some(function(haystackGroup) {
-			console.log('needleGroup', needleGroup.toString());
-			console.log('haystackGroup', haystackGroup.toString());
+			debug('needleGroup', needleGroup.toString());
+			debug('haystackGroup', haystackGroup.toString());
 			const isMatching = checkMatchingGroup(needleGroup, haystackGroup);
 
-			console.log('group isMatching', isMatching);
+			debug('group isMatching', isMatching);
 
 			return isMatching;
 		});
