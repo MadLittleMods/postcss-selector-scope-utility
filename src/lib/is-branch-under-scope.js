@@ -13,7 +13,7 @@ let splitNode = function(node, ...splitArgs) {
 };
 
 
-let checkEqualNode = function(needleNode, haystackNode) {
+let checkMatchingNode = function(needleNode, haystackNode) {
 	if(needleNode.type !== haystackNode.type && needleNode.type !== 'universal' && haystackNode.type !== 'universal') {
 		return false;
 	}
@@ -47,12 +47,25 @@ let checkEqualNode = function(needleNode, haystackNode) {
 };
 
 // Check whether all of the needle is in the haystack
-let checkEqualGroup = function(needleGroup, haystackGroup) {
-	let currentIndex = 0;
+let checkMatchingGroup = function(needleGroup, haystackGroup) {
+	let currentHaystackIndex = 0;
 	return needleGroup.every(function(needleNode) {
 
-		return haystackGroup.slice(currentIndex).some(function(haystackNode) {
-			return checkEqualNode(needleNode, haystackNode);
+		const availableHaystack = haystackGroup.slice(currentHaystackIndex);
+
+		return availableHaystack.some(function(haystackNode, haystackIndex) {
+			console.log('\tneedleNode', needleNode.toString());
+			console.log('\thaystackNode', haystackNode.toString());
+			const isMatching = checkMatchingNode(needleNode, haystackNode);
+
+			// Move our starting place in the haystack up to where we found the piece so we don't re-match it
+			if(isMatching) {
+				currentHaystackIndex = haystackIndex;
+			}
+
+			console.log('\tisMatching node', isMatching);
+
+			return isMatching;
 		});
 	})
 };
@@ -81,11 +94,17 @@ let isBranchUnderScope = function(needleBranch, haystackBranch) {
 		return node.type === 'combinator';
 	});
 
-	haystackGroups.some(function(haystackGroup) {
-		needleGroups.some(function(needleGroup) {
+	return needleGroups.every(function(needleGroup) {
+		return haystackGroups.some(function(haystackGroup) {
+			console.log('needleGroup', needleGroup.toString());
+			console.log('haystackGroup', haystackGroup.toString());
+			const isMatching = checkMatchingGroup(needleGroup, haystackGroup);
 
+			console.log('group isMatching', isMatching);
+
+			return isMatching;
 		});
-	})
+	});
 }
 
 export default isBranchUnderScope;

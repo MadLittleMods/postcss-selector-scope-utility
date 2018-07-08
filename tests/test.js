@@ -182,8 +182,8 @@ let testIsBranchUnderScope = function(name, needleSelectorString, haystackSelect
 			let result = isBranchUnderScope(needle, haystack);
 
 			return expected ?
-				t.ok(result, `\`${needleSelectorString}\` should be under scope of \`${haystackSelectorString}\``) :
-				t.notOk(result, `\`${needleSelectorString}\` should NOT be under scope of \`${haystackSelectorString}\``);
+				t.ok(result, `\`${needleSelectorString}\`(define variable) should be under scope of \`${haystackSelectorString}\`(variable usage)`) :
+				t.notOk(result, `\`${needleSelectorString}\`(define variable) should NOT be under scope of \`${haystackSelectorString}\`(variable usage)`);
 		});
 	}
 };
@@ -193,73 +193,94 @@ let testIsBranchUnderScope = function(name, needleSelectorString, haystackSelect
 
 testIsBranchUnderScope(
 	'same selector',
-	'.foo',
-	'.foo',
+	'.foo', // define variable
+	'.foo', // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'in group',
-	'.bar',
-	'.foo.bar',
+	'.bar', // define variable
+	'.foo.bar', // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'multiple in group',
-	'.foo.bar',
-	'.foo.bar.baz',
+	'.foo.bar', // define variable
+	'.foo.bar.baz', // variable usage
 	true
 );
 
 
 testIsBranchUnderScope(
-	'multiple in group',
-	'.foo.bar',
-	'.foo.bar.baz .qux',
+	'multiple in group and extra descendant haystack group',
+	'.foo.bar', // define variable
+	'.foo.bar.baz .qux', // variable usage
 	true
 );
 
 testIsBranchUnderScope(
-	'..',
-	'.foo + .bar',
-	'.foo + .bar .baz',
+	'adjacent sibling selector',
+	'.foo + .bar', // define variable
+	'.foo + .bar .baz', // variable usage
 	true
 );
 
 testIsBranchUnderScope(
-	'..',
-	'.foo + .bar',
-	'.foo ~ .bar .baz',
+	'adjacent sibling selector plus extra haystack class',
+	'.foo + .bar', // define variable
+	'.foo.qux + .bar', // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'adjacent sibling declaration used in general sibling (this is questionable)',
+	'.foo + .bar', // define variable
+	'.foo ~ .bar .baz', // variable usage
+	true
+);
+
+testIsBranchUnderScope(
+	'general sibling declaration used in adjacent sibling',
+	'.foo ~ .bar', // define variable
+	'.foo + .bar .baz', // variable usage
 	true
 );
 
 
 testIsBranchUnderScope(
 	'pseudo',
-	'.foo:hover',
-	'.foo',
+	'.foo', // define variable
+	'.foo:hover', // variable usage
 	true
 );
 
 testIsBranchUnderScope(
+	'variable defined in pseudo should not apply to parent',
+	'.foo:hover', // define variable
+	'.foo', // variable usage
+	false
+);
+
+testIsBranchUnderScope(
 	'nested selector',
-	'.foo:not(.bar)',
-	'.foo:not(.bar:not(.baz))',
+	'.foo:not(.bar)', // define variable
+	'.foo:not(.bar:not(.baz))', // variable usage
 	true
 );
 
 testIsBranchUnderScope(
 	'multiple in group but targeting something else',
-	'.foo.bar .foo.qux',
-	'.foo.bar',
+	'.foo.bar .foo.qux', // define variable
+	'.foo.bar', // variable usage
 	false
 );
 
 testIsBranchUnderScope(
 	'..',
-	'.foo + .bar',
-	'.foo > .bar',
+	'.foo + .bar', // define variable
+	'.foo > .bar', // variable usage
 	false
 );
 
