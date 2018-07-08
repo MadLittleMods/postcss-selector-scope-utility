@@ -1,27 +1,23 @@
+const test = require('tape');
+const deepEqual = require('deep-equal');
+const yargs = require('yargs');
+const pick = require('lodash/pick');
 
-//import nomo from 'node-monkey';
-//nomo.start({port: 50501});
+const postcss = require('postcss');
 
-import test from 'tape';
-import deepEqual from 'deep-equal';
-import yargs from 'yargs';
-import pick from 'lodash/pick';
-
-import postcss from 'postcss';
-
-import parseSelector from '../src/lib/parse-selector';
-import generateBranches from '../src/lib/generate-branches';
-import isBranchUnderScope from '../src/lib/is-branch-under-scope';
+const parseSelector = require('../lib/parse-selector');
+const generateBranches = require('../lib/generate-branches');
+const isBranchUnderScope = require('../lib/is-branch-under-scope');
 
 
 var opts = yargs
-  .option('grep', {
-    alias: 'g',
-    description: 'Output'
-  })
-  .help('help')
-  .alias('help', 'h')
-  .argv;
+	.option('grep', {
+		alias: 'g',
+		description: 'Output'
+	})
+	.help('help')
+	.alias('help', 'h')
+	.argv;
 
 
 const grepRe = new RegExp(opts.grep);
@@ -69,7 +65,7 @@ let generateBranchesProcessor = (...processArgs) => {
 	});
 };
 
-let testGenerateBranches = function(name, input, expected) {
+function testGenerateBranches(name, input, expected) {
 	const testName = `testGenerateBranches: ${name}`;
 	if(!opts.grep || (opts.grep && grepRe.test(testName))) {
 		generateBranchesProcessor(input)
@@ -148,19 +144,18 @@ testGenerateBranches(
 
 
 
-let testIsBranchUnderScope = function(name, needle, haystack, expected) {
+function testIsBranchUnderScope(name, needle, haystack, expected) {
 	const testName = `testIsBranchUnderScope: ${name}`;
 	if(!opts.grep || (opts.grep && grepRe.test(testName))) {
 		test(testName, (t) => {
 			t.plan(1);
 			let result = isBranchUnderScope(
-				{
-					...needle,
+				Object.assign({}, needle, {
 					selector: parseSelector(needle.selector).nodes[0]
-				}, {
-					...haystack,
+				}),
+				Object.assign({}, haystack, {
 					selector: parseSelector(haystack.selector).nodes[0]
-				}
+				})
 			);
 
 			return expected ?

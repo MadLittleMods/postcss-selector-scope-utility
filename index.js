@@ -1,5 +1,5 @@
-import generateBranches from './lib/generate-branches';
-import isBranchUnderScope from './lib/is-branch-under-scope';
+const generateBranches = require('./lib/generate-branches');
+const isBranchUnderScope = require('./lib/is-branch-under-scope');
 
 
 function isUnderScope(needleNode, haystackNode) {
@@ -13,4 +13,4 @@ function isUnderScope(needleNode, haystackNode) {
 	});
 }
 
-export default isUnderScope;
+module.exports = isUnderScope;

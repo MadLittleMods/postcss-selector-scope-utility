@@ -1,11 +1,10 @@
 {
   "name": "postcss-node-scope-utility",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prepublish": "babel src --out-dir dist",
-    "test-unformatted": "babel-tape-runner tests/test.js",
+    "test-unformatted": "node tests/test.js",
     "test": "npm run test-unformatted | tap-spec",
     "tap-spec": "tap-spec"
   },
@@ -17,9 +16,6 @@
     "postcss-selector-parser": "^1.1.4"
   },
   "devDependencies": {
-    "babel": "^5.6.14",
-    "babel-eslint": "^7.1.1",
-    "babel-tape-runner": "^1.1.0",
     "deep-equal": "^1.0.1",
     "eslint": "^3.12.2",
     "lodash": "^4.17.10",
