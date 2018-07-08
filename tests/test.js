@@ -249,6 +249,7 @@ testIsBranchUnderScope(
 	'variable flows to descendant',
 	{ selector: '.foo' }, // define variable
 	{ selector: '.foo .qux' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/fgb2mkn8/
 	true
 );
 
@@ -256,6 +257,7 @@ testIsBranchUnderScope(
 	'multiple in group and variable flows to descendant',
 	{ selector: '.foo.bar' }, // define variable
 	{ selector: '.foo.bar.baz .qux' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/8un425xp/
 	true
 );
 
@@ -270,6 +272,7 @@ testIsBranchUnderScope(
 	'.foo variable flows to descendant .qux even though it is a sibling of .bar',
 	{ selector: '.foo' }, // define variable
 	{ selector: '.foo > .bar + .qux' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/ox7bn9v2/
 	true
 );
 
@@ -298,6 +301,7 @@ testIsBranchUnderScope(
 	'adjacent sibling selector and variable flows to descendant',
 	{ selector: '.foo + .bar' }, // define variable
 	{ selector: '.foo + .bar .baz' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/e845qchv/
 	true
 );
 
@@ -305,6 +309,7 @@ testIsBranchUnderScope(
 	'adjacent sibling selector plus extra haystack class',
 	{ selector: '.foo + .bar' }, // define variable
 	{ selector: '.foo.qux + .bar' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/wm2s4cko/
 	true
 );
 
@@ -347,6 +352,7 @@ testIsBranchUnderScope(
 	'needle should apply to last part of haystack',
 	{ selector: '.foo' }, // define variable
 	{ selector: '.bar:hover + .foo' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/kth20wLe/
 	true
 );
 
@@ -354,6 +360,7 @@ testIsBranchUnderScope(
 	'sibling is not a descendant',
 	{ selector: '.foo' }, // define variable
 	{ selector: '.foo:hover + .bar' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/Ls286u1v/
 	false
 );
 
@@ -400,9 +407,10 @@ testIsBranchUnderScope(
 );
 
 testIsBranchUnderScope(
-	'make sure we do not try to re-match the needle the same piece of haystack',
+	'make sure we do not try to re-match the needle the same piece of haystack (remember we are relying on explicit structure of the selector, not real-life potential)',
 	{ selector: '.foo.foo .foo.foo' }, // define variable
 	{ selector: '.foo.foo .bar' }, // variable usage
+	// http://jsfiddle.net/MadLittleMods/Lvbnkep1/
 	false
 );
 
