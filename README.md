@@ -1,7 +1,8 @@
+# THIS IS A WIP
 
- - Each @rule is just a condition that can be satisfied anywhere in the scope chain
+This project is a work-in-progress. Do not use
 
-
+- Each @rule is just a condition that can be satisfied anywhere in the scope chain
 
 # Testing
 
